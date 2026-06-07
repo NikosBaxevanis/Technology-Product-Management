@@ -4,6 +4,8 @@ import Data.Manufacturer;
 import Data.PersonalComputer;
 import Data.Product;
 import Data.SmartPhone;
+import Sales.Sales;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -16,6 +18,7 @@ public  class MainP {
 
     private static ArrayList<Product> allProducts = new ArrayList<>();
     private static ArrayList<Manufacturer> manufacturers = new ArrayList<>();
+    private static ArrayList<Sales> allSales = new ArrayList<>();
 
     Scanner Keyb;
 
@@ -44,7 +47,7 @@ public  class MainP {
                     this.menuManufacturers();
                     break;
                 case 4:
-                   // this.MenuInsert();
+                    this.menuSalesAndStats();
                     break;
                 case 0:
                     System.out.println("Πραγματοποιήσατε έξοδο από το κατάστημα μας. Καλή συνέχεια.");
@@ -282,6 +285,105 @@ public  class MainP {
             if (p.getCode().equalsIgnoreCase(code)) return p;
         }
         return null;
+    }
+
+
+    private void menuSalesAndStats() {
+        int ch;
+        do {
+            this.Cls();
+            System.out.println("\n-- ΛΕΙΤΟΥΡΓΙΕΣ ΠΩΛΗΣΕΩΝ & ΣΤΑΤΙΣΤΙΚΩΝ --");
+            System.out.println("[1]...Καταχώρηση Νέας Πώλησης");
+            System.out.println("[2]...Προβολή Ιστορικού Πωλήσεων");
+            System.out.println("[3]...Στατιστικά ανά Κατηγορία Συσκευής");
+            System.out.println("[4]...Στατιστικά ανά Κατασκευαστή");
+            System.out.println("[0]...Επιστροφή στο αρχικό Menu");
+            System.out.print("Επιλογή : ");
+            ch = this.Keyb.nextInt();
+            this.Keyb.nextLine();
+
+            if (ch == 1) {
+
+                System.out.print("Δώστε τον κωδικό του προϊόντος προς πώληση: ");
+                String code = Keyb.nextLine();
+                Product p = findProduct(code);
+
+                if (p == null) {
+                    System.out.println("Το προϊόν δεν βρέθηκε!");
+                    this.Pause();
+                    continue;
+                }
+
+                System.out.println("Προϊόν: " + p.getTitle() + " | Διαθέσιμο Απόθεμα: " + p.getQuantity());
+                System.out.print("Ποσότητα προς πώληση: ");
+                int qtyToSell = Keyb.nextInt();
+                Keyb.nextLine();
+
+                if (qtyToSell <= 0) {
+                    System.out.println("Λάθος ποσότητα!");
+                } else if (qtyToSell > p.getQuantity()) {
+                    System.out.println("Σφάλμα: Δεν υπάρχει αρκετό απόθεμα. Διαθέσιμα: " + p.getQuantity());
+                } else {
+                    p.setQuantity(p.getQuantity() - qtyToSell);
+                    allSales.add(new Sales(p, qtyToSell));
+                    System.out.println("Η πώληση ολοκληρώθηκε επιτυχώς!");
+                }
+                this.Pause();
+
+            } else if (ch == 2) {
+
+                System.out.println("\n--- ΙΣΤΟΡΙΚΟ ΠΩΛΗΣΕΩΝ ---");
+                if (allSales.isEmpty()) {
+                    System.out.println("Δεν έχει γίνει καμία πώληση ακόμα.");
+                } else {
+                    for (Sales s : allSales) {
+                        System.out.println(s);
+                    }
+                }
+                this.Pause();
+
+            } else if (ch == 3) {
+
+                int pcQty = 0, phoneQty = 0;
+                double pcRevenue = 0, phoneRevenue = 0;
+
+                for (Sales s : allSales) {
+                    if (s.getProduct() instanceof PersonalComputer) {
+                        pcQty += s.getQuantitySold();
+                        pcRevenue += s.getTotalPrice();
+                    } else if (s.getProduct() instanceof SmartPhone) {
+                        phoneQty += s.getQuantitySold();
+                        phoneRevenue += s.getTotalPrice();
+                    }
+                }
+
+                System.out.println("\n--- ΣΤΑΤΙΣΤΙΚΑ ΑΝΑ ΚΑΤΗΓΟΡΙΑ ---");
+                System.out.printf("Ηλεκτρονικοί Υπολογιστές -> Τεμάχια: %d, Έσοδα: %.2f€\n", pcQty, pcRevenue);
+                System.out.printf("Κινητά Τηλέφωνα          -> Τεμάχια: %d, Έσοδα: %.2f€\n", phoneQty, phoneRevenue);
+                this.Pause();
+
+            } else if (ch == 4) {
+                System.out.println("\n--- ΣΤΑΤΙΣΤΙΚΑ ΑΝΑ ΚΑΤΑΣΚΕΥΑΣΤΗ ---");
+                if (manufacturers.isEmpty()) {
+                    System.out.println("Δεν υπάρχουν κατασκευαστές.");
+                } else {
+                    for (Manufacturer m : manufacturers) {
+                        int totalQty = 0;
+                        double totalRevenue = 0;
+
+                        for (Sales s : allSales) {
+                            if (s.getProduct().getManufacturer().getCode().equalsIgnoreCase(m.getCode())) {
+                                totalQty += s.getQuantitySold();
+                                totalRevenue += s.getTotalPrice();
+                            }
+                        }
+                        System.out.printf("Κατασκευαστής: %-15s -> Συνολικά Τεμάχια: %d, Συνολικά Έσοδα: %.2f€\n",
+                                m.getName(), totalQty, totalRevenue);
+                    }
+                }
+                this.Pause();
+            }
+        } while (ch != 0);
     }
 
 }
