@@ -32,4 +32,9 @@ package Data;
                     ", Χρώμα: " + color + ", Κατασκευαστής: " + (getManufacturer() != null ? getManufacturer().getName() : "N/A") +
                     ", Τιμή: " + getPrice() + "€, Ποσότητα: " + getQuantity() + "]";
         }
+
+        public String AsCsvLine() {
+            return "PHONE;" + getCode() + ";" + getTitle() + ";" + getManufacturer().getCode() + ";" +
+                    getPrice() + ";" + getQuantity() + ";" + this.camRes + ";" + this.color;
+        }
     }

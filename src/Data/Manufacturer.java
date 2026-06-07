@@ -22,4 +22,8 @@ public class Manufacturer {
     public String toString() {
         return "Κατασκευαστής [Κωδικός: " + code + ", Επωνυμία: " + name + ", Email: " + email + "]";
     }
+
+    public String AsCsvLine() {
+        return this.code + ";" + this.name + ";" + this.email;
+    }
 }

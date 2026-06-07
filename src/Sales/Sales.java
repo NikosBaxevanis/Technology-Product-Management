@@ -11,12 +11,11 @@ public class Sales {
     private int quantitySold;
     private LocalDateTime saleDate;
 
-    public Sales(Product product, int quantitySold) {
+    public Sales(Product product, int quantitySold, LocalDateTime saleDate) {
         this.product = product;
         this.quantitySold = quantitySold;
-        this.saleDate = LocalDateTime.now(); // Παίρνει την τρέχουσα ημερομηνία και ώρα
+        this.saleDate = saleDate;
     }
-
 
     public Product getProduct() { return product; }
     public int getQuantitySold() { return quantitySold; }
@@ -34,6 +33,10 @@ public class Sales {
                 " | Τεμάχια: " + quantitySold +
                 " | Συνολικό Κόστος: " + String.format("%.2f", getTotalPrice()) + "€" +
                 " | Ημ/νία: " + saleDate.format(formatter);
+    }
+
+    public String AsCsvLine() {
+        return getProduct().getCode() + ";" + this.quantitySold + ";" + this.saleDate;
     }
 }
 

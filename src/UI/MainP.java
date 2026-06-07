@@ -6,7 +6,8 @@ import Data.Product;
 import Data.SmartPhone;
 import Sales.Sales;
 
-import java.io.IOException;
+import java.io.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -21,6 +22,124 @@ public  class MainP {
     private static ArrayList<Sales> allSales = new ArrayList<>();
 
     Scanner Keyb;
+
+    private final static String ManufacturerFile = "Manufacturers.csv";
+    private final static String ProductFile = "Products.csv";
+    private final static String SaleFile = "Sales.csv";
+
+    public void SaveData() {
+        // 1. Αποθήκευση Κατασκευαστών
+        try (PrintWriter Pr = new PrintWriter(ManufacturerFile)) {
+            for (Manufacturer m : manufacturers) {
+                Pr.println(m.AsCsvLine());
+            }
+        } catch (FileNotFoundException ex) {
+            System.out.println("Cannot open output file: " + ManufacturerFile);
+        }
+
+        // 2. Αποθήκευση Προϊόντων
+        try (PrintWriter Pr = new PrintWriter(ProductFile)) {
+            for (Product p : allProducts) {
+                if (p instanceof PersonalComputer) {
+                    Pr.println(((PersonalComputer) p).AsCsvLine());
+                } else if (p instanceof SmartPhone) {
+                    Pr.println(((SmartPhone) p).AsCsvLine());
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            System.out.println("Cannot open output file: " + ProductFile);
+        }
+
+        // 3. Αποθήκευση Πωλήσεων
+        try (PrintWriter Pr = new PrintWriter(SaleFile)) {
+            for (Sales s : allSales) {
+                Pr.println(s.AsCsvLine());
+            }
+        } catch (FileNotFoundException ex) {
+            System.out.println("Cannot open output file: " + SaleFile);
+        }
+        System.out.println("Data Successfully Saved to CSV files...");
+    }
+
+    public void LoadData() {
+        String Line = null;
+        String[] FMat;
+
+        // 1. Φόρτωση Κατασκευαστών
+        try (BufferedReader Br = new BufferedReader(new InputStreamReader(new FileInputStream(ManufacturerFile)))) {
+            while ((Line = Br.readLine()) != null) {
+                FMat = Line.split(";");
+                if (FMat.length == 3) {
+                    manufacturers.add(new Manufacturer(FMat[0], FMat[1], FMat[2]));
+                }
+            }
+            System.out.println("Manufacturers Loaded...");
+        } catch (FileNotFoundException ex) {
+            System.out.println(ManufacturerFile + " not found. Will be created on exit.");
+        } catch (IOException | NumberFormatException ex) {
+            System.out.println("Data Error in Manufacturers...");
+        }
+
+        // 2. Φόρτωση Προϊόντων (PC & Phones)
+        try (BufferedReader Br = new BufferedReader(new InputStreamReader(new FileInputStream(ProductFile)))) {
+            while ((Line = Br.readLine()) != null) {
+                FMat = Line.split(";");
+                String type = FMat[0];
+                String code = FMat[1];
+                String title = FMat[2];
+                String mCode = FMat[3];
+                double price = Double.parseDouble(FMat[4]);
+                int qty = Integer.parseInt(FMat[5]);
+
+                Manufacturer m = findManufacturer(mCode);
+                if (m == null) continue; // Προσπέραση αν δεν υπάρχει ο κατασκευαστής
+
+                if (type.equals("PC")) {
+                    int ram = Integer.parseInt(FMat[6]);
+                    int storage = Integer.parseInt(FMat[7]);
+                    allProducts.add(new PersonalComputer(code, title, m, price, qty, ram, storage));
+                } else if (type.equals("PHONE")) {
+                    String cam = FMat[6];
+                    String color = FMat[7];
+                    allProducts.add(new SmartPhone(code, title, m, price, qty, cam, color));
+                }
+            }
+            System.out.println("Products Loaded...");
+        } catch (FileNotFoundException ex) {
+            System.out.println(ProductFile + " not found. Will be created on exit.");
+        } catch (IOException | NumberFormatException ex) {
+            System.out.println("Data Error in Products...");
+        }
+
+        // 3. Φόρτωση Πωλήσεων
+        try (BufferedReader Br = new BufferedReader(new InputStreamReader(new FileInputStream(SaleFile)))) {
+            while ((Line = Br.readLine()) != null) {
+                FMat = Line.split(";");
+                if (FMat.length == 3) {
+                    String pCode = FMat[0];
+                    int qtySold = Integer.parseInt(FMat[1]);
+
+                    try {
+                        LocalDateTime date = LocalDateTime.parse(FMat[2]);
+                        Product p = findProduct(pCode);
+                        if (p != null) {
+                            allSales.add(new Sales(p, qtySold, date));
+                        }
+                    } catch (java.time.format.DateTimeParseException e) {
+                        System.out.println("Σφάλμα μορφής ημερομηνίας στην πώληση του προϊόντος: " + pCode);
+                    }
+                }
+            }
+            System.out.println("Sales History Loaded...");
+        } catch (FileNotFoundException ex) {
+            System.out.println(SaleFile + " not found.");
+        } catch (IOException | NumberFormatException ex) {
+            System.out.println("Data Error in Sales...");
+        }
+    }
+
+
+
 
     public  void Menu() {
         int ch;
@@ -50,6 +169,7 @@ public  class MainP {
                     this.menuSalesAndStats();
                     break;
                 case 0:
+                    this.SaveData();
                     System.out.println("Πραγματοποιήσατε έξοδο από το κατάστημα μας. Καλή συνέχεια.");
                     break;
                 default:
@@ -61,7 +181,7 @@ public  class MainP {
 
     public static void main(String[] args) {
         MainP MP = new MainP();
-
+        MP.LoadData();
         Manufacturer m1 = new Manufacturer("M01", "Apple", "info@apple.com");
         Manufacturer m2 = new Manufacturer("M02", "Samsung", "info@samsung.com");
         manufacturers.add(m1);
@@ -70,7 +190,10 @@ public  class MainP {
         allProducts.add(new PersonalComputer("C01", "MacBook Pro", m1, 1999.99, 10, 16, 512));
         allProducts.add(new SmartPhone("P01", "Galaxy S24", m2, 999.00, 15, "50MP", "Μαύρο"));
 
+
         MP.Menu();
+
+
     }
 
     void Pause() {
@@ -224,7 +347,7 @@ public  class MainP {
     private  void menuSmartPhones() {
         int ch;
         do {
-            System.out.println("\n-- ΔΙΑΧΕΙΡΙΣΗ ΚΙΝΗΤΩΝ ΤΗΛΕΦΩΝΩΝ --");
+            System.out.println("\n-- Διαχείριση Κινητών Τηλεφώνων --");
             System.out.println("\n-- Πως θα θέλατε να διαχειριστείτε το SmartPhone σας; --");
             System.out.println("[1]...Εισαγωγή SmartPhone");
             System.out.println("[2]...Διόρθωση SmartPhone");
@@ -325,7 +448,9 @@ public  class MainP {
                     System.out.println("Σφάλμα: Δεν υπάρχει αρκετό απόθεμα. Διαθέσιμα: " + p.getQuantity());
                 } else {
                     p.setQuantity(p.getQuantity() - qtyToSell);
-                    allSales.add(new Sales(p, qtyToSell));
+
+                    allSales.add(new Sales(p, qtyToSell, LocalDateTime.now()));
+
                     System.out.println("Η πώληση ολοκληρώθηκε επιτυχώς!");
                 }
                 this.Pause();

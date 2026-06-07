@@ -33,4 +33,9 @@ public class PersonalComputer extends Product {
                 "GB, Κατασκευαστής: " + (getManufacturer() != null ? getManufacturer().getName() : "N/A") +
                 ", Τιμή: " + getPrice() + "€, Ποσότητα: " + getQuantity() + "]";
     }
+
+    public String AsCsvLine() {
+        return "PC;" + getCode() + ";" + getTitle() + ";" + getManufacturer().getCode() + ";" +
+                getPrice() + ";" + getQuantity() + ";" + this.ramSize + ";" + this.romSize;
+    }
 }
