@@ -292,7 +292,7 @@ public  class MainP {
         int ch;
         do {
             this.Cls();
-            System.out.println("\n-- ΛΕΙΤΟΥΡΓΙΕΣ ΠΩΛΗΣΕΩΝ & ΣΤΑΤΙΣΤΙΚΩΝ --");
+            System.out.println("\n-- Λειτουργίες Πωλήσεων & Στατιστικών --");
             System.out.println("[1]...Καταχώρηση Νέας Πώλησης");
             System.out.println("[2]...Προβολή Ιστορικού Πωλήσεων");
             System.out.println("[3]...Στατιστικά ανά Κατηγορία Συσκευής");
