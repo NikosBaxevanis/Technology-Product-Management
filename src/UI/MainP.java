@@ -141,6 +141,77 @@ public  class MainP {
 
 
 
+
+
+    public static void main(String[] args) {
+
+        MainP MP = new MainP();
+        MP.LoadData();
+
+        if (manufacturers.isEmpty() && allProducts.isEmpty()) {
+
+            Manufacturer m1 = new Manufacturer("M01", "Apple", "info@apple.com");
+            Manufacturer m2 = new Manufacturer("M02", "Samsung", "info@samsung.com");
+            manufacturers.add(m1);
+            manufacturers.add(m2);
+
+            allProducts.add(new PersonalComputer("C01", "MacBook Pro", m1, 1999.99, 10, 16, 512));
+            allProducts.add(new SmartPhone("P01", "Galaxy S24", m2, 999.00, 15, "50MP", "Μαύρο"));
+
+        }
+        MP.Menu();
+    }
+
+    void Pause() {
+        System.out.print("\n\nΠιέστε <Enter> για συνέχεια  ");
+        this.Keyb.nextLine();
+    }
+
+    public void Cls() {
+        try {
+            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+        } catch (IOException var2) {
+        } catch (InterruptedException var3) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+
+    /**
+     * Διαβάζει έναν ακέραιο αριθμό με ασφάλεια. Αν ο χρήστης εισάγει άκυρα δεδομένα,
+     * τον προτρέπει να ξαναπροσπαθήσει χωρίς να κρασάρει η εφαρμογή.
+     * * @return Ο έγκυρος ακέραιος που πληκτρολόγησε ο χρήστης.
+     */
+    private int readSafeInt() {
+        while (true) {
+            try {
+                int num = Keyb.nextInt();
+                Keyb.nextLine(); // Καθαρισμός του buffer
+                return num;
+            } catch (java.util.InputMismatchException e) {
+                System.out.print("Μη έγκυρος αριθμός! Παρακαλώ εισάγετε ακέραιο: ");
+                Keyb.nextLine(); // Καθαρισμός του buffer από το λάθος input
+            }
+        }
+    }
+
+    /**
+     * Διαβάζει έναν δεκαδικό αριθμό με ασφάλεια.
+     * * @return Ο έγκυρος δεκαδικός που πληκτρολόγησε ο χρήστης.
+     */
+    private double readSafeDouble() {
+        while (true) {
+            try {
+                double num = Keyb.nextDouble();
+                Keyb.nextLine(); // Καθαρισμός του buffer
+                return num;
+            } catch (java.util.InputMismatchException e) {
+                System.out.print("Μη έγκυρος αριθμός! Παρακαλώ εισάγετε δεκαδικό (π.χ. 12,50): ");
+                Keyb.nextLine(); // Καθαρισμός του buffer
+            }
+        }
+    }
+
     public  void Menu() {
         int ch;
         do {
@@ -179,39 +250,11 @@ public  class MainP {
         } while(ch != 0);
     }
 
-    public static void main(String[] args) {
-        MainP MP = new MainP();
-        MP.LoadData();
-        Manufacturer m1 = new Manufacturer("M01", "Apple", "info@apple.com");
-        Manufacturer m2 = new Manufacturer("M02", "Samsung", "info@samsung.com");
-        manufacturers.add(m1);
-        manufacturers.add(m2);
-
-        allProducts.add(new PersonalComputer("C01", "MacBook Pro", m1, 1999.99, 10, 16, 512));
-        allProducts.add(new SmartPhone("P01", "Galaxy S24", m2, 999.00, 15, "50MP", "Μαύρο"));
-
-
-        MP.Menu();
-
-
-    }
-
-    void Pause() {
-        System.out.print("\n\nΠιέστε <Enter> για συνέχεια  ");
-        this.Keyb.nextLine();
-    }
-
-    public void Cls() {
-        try {
-            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-        } catch (IOException var2) {
-        } catch (InterruptedException var3) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-
-    private  void menuManufacturers() {
+    /**
+     * Διαχειρίζεται το υπομενού για τις CRUD λειτουργίες των Κατασκευαστών.
+     * Περιλαμβάνει έλεγχο εγκυρότητας επιλογών με readSafeInt και έλεγχο μοναδικότητας κωδικού.
+     */
+    private void menuManufacturers() {
         int ch;
         do {
             this.Cls();
@@ -222,17 +265,28 @@ public  class MainP {
             System.out.println("[3]...Διαγραφή κατασκευαστή ");
             System.out.println("[4]...Προβολή Όλων των κατασκευαστών");
             System.out.println("[0]...Επιστροφή στο αρχικό Menu");
-            ch = this.Keyb.nextInt();
-            this.Keyb.nextLine();
+            System.out.print("Επιλογή : ");
+            ch = readSafeInt();
+
             if (ch == 1) {
                 System.out.print("Κωδικός: ");
                 String code = Keyb.nextLine();
+
+                // (Validation)
+                if (findManufacturer(code) != null) {
+                    System.out.println("Σφάλμα: Αυτός ο κωδικός κατασκευαστή υπάρχει ήδη!");
+                    this.Pause();
+                    continue;
+                }
+
                 System.out.print("Επωνυμία: ");
                 String name = Keyb.nextLine();
                 System.out.print("Email: ");
                 String email = Keyb.nextLine();
                 manufacturers.add(new Manufacturer(code, name, email));
                 System.out.println("Ο κατασκευαστής προστέθηκε!");
+                this.Pause();
+
             } else if (ch == 2) {
                 System.out.print("Δώστε κωδικό για διόρθωση: ");
                 String code = Keyb.nextLine();
@@ -243,7 +297,11 @@ public  class MainP {
                     System.out.print("Νέο Email (" + m.getEmail() + "): ");
                     m.setEmail(Keyb.nextLine());
                     System.out.println("Τα στοιχεία ενημερώθηκαν!");
-                } else System.out.println("Δεν βρέθηκε!");
+                } else {
+                    System.out.println("Δεν βρέθηκε!");
+                }
+                this.Pause();
+
             } else if (ch == 3) {
                 System.out.print("Δώστε κωδικό για διαγραφή: ");
                 String code = Keyb.nextLine();
@@ -251,12 +309,19 @@ public  class MainP {
                 if (m != null) {
                     manufacturers.remove(m);
                     System.out.println("Διαγράφηκε επιτυχώς!");
-                } else System.out.println("Δεν βρέθηκε!");
+                } else {
+                    System.out.println("Δεν βρέθηκε!");
+                }
+                this.Pause();
+
             } else if (ch == 4) {
-                for (Manufacturer m : manufacturers) System.out.println(m);
+                System.out.println("\n--- ΛΙΣΤΑ ΚΑΤΑΣΚΕΥΑΣΤΩΝ ---");
+                for (Manufacturer m : manufacturers) {
+                    System.out.println(m);
+                }
                 this.Pause();
             }
-        }while (ch != 0);
+        } while (ch != 0);
     }
 
     private   Manufacturer findManufacturer(String code) {
@@ -265,9 +330,14 @@ public  class MainP {
     }
 
 
+    /**
+     * Διαχειρίζεται το υπομενού για τις CRUD λειτουργίες των Ηλεκτρονικών Υπολογιστών.
+     * Εφαρμόζει ασφαλείς μεθόδους ανάγνωσης (readSafeInt, readSafeDouble) και ελέγχους εγκυρότητας.
+     */
     private void menuPersonalComputers () {
         int ch;
         do {
+            this.Cls(); // Προσθήκη καθαρισμού οθόνης για ομοιομορφία
             System.out.println("\n -- Διαχείριση Ηλεκτρονικών Υπολογιστών --");
             System.out.println("\n-- Πως θα θέλατε να διαχειριστείτε τον προσωπικό σας υπολογιστή; --");
             System.out.println("[1]...Εισαγωγή υπολογιστή");
@@ -275,12 +345,20 @@ public  class MainP {
             System.out.println("[3]...Διαγραφή υπολογιστή ");
             System.out.println("[4]...Προβολή Όλων των υπολογιστών");
             System.out.println("[0]...Επιστροφή στο αρχικό Menu");
-            ch = this.Keyb.nextInt();
-            Keyb.nextLine();
+            System.out.print("Επιλογή : ");
+            ch = readSafeInt();
 
             if (ch == 1) {
                 System.out.print("Κωδικός: ");
                 String code = Keyb.nextLine();
+
+                // Validation: Έλεγχος μοναδικότητας κωδικού προϊόντος
+                if (findProduct(code) != null) {
+                    System.out.println("Σφάλμα: Αυτός ο κωδικός προϊόντος υπάρχει ήδη!");
+                    this.Pause();
+                    continue;
+                }
+
                 System.out.print("Λεκτικό: ");
                 String title = Keyb.nextLine();
                 System.out.print("Κωδικός Κατασκευαστή: ");
@@ -291,18 +369,27 @@ public  class MainP {
                     this.Pause();
                     continue;
                 }
+
                 System.out.print("Τιμή: ");
-                double price = Keyb.nextDouble();
+                double price = readSafeDouble();
                 System.out.print("Ποσότητα: ");
-                int qty = Keyb.nextInt();
+                int qty = readSafeInt();
                 System.out.print("Μέγεθος RAM (GB): ");
-                int ram = Keyb.nextInt();
+                int ram = readSafeInt();
                 System.out.print("Χωρητικότητα Σκληρού (GB): ");
-                int storage = Keyb.nextInt();
+                int storage = readSafeInt();
+
+                // Validation: Έλεγχος για θετικές/μη αρνητικές τιμές
+                if (price <= 0 || qty < 0 || ram <= 0 || storage <= 0) {
+                    System.out.println("Σφάλμα: Οι αριθμητικές τιμές (τιμή, RAM, αποθηκευτικός χώρος) πρέπει να είναι θετικές και η ποσότητα μη αρνητική!");
+                    this.Pause();
+                    continue;
+                }
 
                 allProducts.add(new PersonalComputer(code, title, m, price, qty, ram, storage));
                 System.out.println("Ο υπολογιστής προστέθηκε!");
                 this.Pause();
+
             } else if (ch == 2) {
                 System.out.print("Δώστε κωδικό Η/Υ για διόρθωση: ");
                 String code = Keyb.nextLine();
@@ -312,17 +399,34 @@ public  class MainP {
                     PersonalComputer c = (PersonalComputer) p;
                     System.out.print("Νέο Λεκτικό: ");
                     c.setTitle(Keyb.nextLine());
+
                     System.out.print("Νέα Τιμή: ");
-                    c.setPrice(Keyb.nextDouble());
+                    double newPrice = readSafeDouble(); // Αλλαγή σε readSafeDouble
+
                     System.out.print("Νέα Ποσότητα: ");
-                    c.setQuantity(Keyb.nextInt());
+                    int newQty = readSafeInt(); // Αλλαγή σε readSafeInt
+
                     System.out.print("Νέα RAM: ");
-                    c.setRamSize(Keyb.nextInt());
+                    int newRam = readSafeInt(); // Αλλαγή σε readSafeInt
+
                     System.out.print("Νέο Storage: ");
-                    c.setRomSize(Keyb.nextInt());
-                    System.out.println("Ενημερώθηκε!");
-                } else System.out.println("Δεν βρέθηκε ηλεκτρονικός υπολογιστής με αυτόν τον κωδικό!");
+                    int newStorage = readSafeInt(); // Αλλαγή σε readSafeInt
+
+                    // Validation: Έλεγχος τιμών και στη διόρθωση
+                    if (newPrice <= 0 || newQty < 0 || newRam <= 0 || newStorage <= 0) {
+                        System.out.println("Σφάλμα: Μη έγκυρες τιμές! Η διόρθωση ακυρώθηκε.");
+                    } else {
+                        c.setPrice(newPrice);
+                        c.setQuantity(newQty);
+                        c.setRamSize(newRam);
+                        c.setRomSize(newStorage);
+                        System.out.println("Ενημερώθηκε!");
+                    }
+                } else {
+                    System.out.println("Δεν βρέθηκε ηλεκτρονικός υπολογιστής με αυτόν τον κωδικό!");
+                }
                 this.Pause();
+
             } else if (ch == 3) {
                 System.out.print("Δώστε κωδικό για διαγραφή: ");
                 String code = Keyb.nextLine();
@@ -330,23 +434,40 @@ public  class MainP {
                 if (p instanceof PersonalComputer) {
                     allProducts.remove(p);
                     System.out.println("Διαγράφηκε!");
-                } else System.out.println("Δεν βρέθηκε!");
+                } else {
+                    System.out.println("Δεν βρέθηκε!");
+                }
                 this.Pause();
+
             } else if (ch == 4) {
+                System.out.println("\n--- ΛΙΣΤΑ ΗΛΕΚΤΡΟΝΙΚΩΝ ΥΠΟΛΟΓΙΣΤΩΝ ---");
+                boolean found = false;
                 for (Product p : allProducts) {
-                    if (p instanceof PersonalComputer) System.out.println(p);
+                    if (p instanceof PersonalComputer) {
+                        System.out.println(p);
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    System.out.println("Δεν υπάρχουν καταχωρημένοι υπολογιστές.");
                 }
                 this.Pause();
             }
-        }while (ch != 0);
+        } while (ch != 0);
     }
 
 
 
 
-    private  void menuSmartPhones() {
+    /**
+     * Διαχειρίζεται το υπομενού για τις CRUD λειτουργίες των SmartPhones.
+     * Χρησιμοποιεί readSafeInt και readSafeDouble για την αποφυγή σφαλμάτων εισαγωγής
+     * και ελέγχει την εγκυρότητα των δεδομένων (τιμές, ποσότητες, κωδικούς).
+     */
+    private void menuSmartPhones() {
         int ch;
         do {
+            this.Cls(); // Προσθήκη καθαρισμού οθόνης για ομοιομορφία
             System.out.println("\n-- Διαχείριση Κινητών Τηλεφώνων --");
             System.out.println("\n-- Πως θα θέλατε να διαχειριστείτε το SmartPhone σας; --");
             System.out.println("[1]...Εισαγωγή SmartPhone");
@@ -354,52 +475,117 @@ public  class MainP {
             System.out.println("[3]...Διαγραφή SmartPhone ");
             System.out.println("[4]...Προβολή Όλων των SmartPhones");
             System.out.println("[0]...Επιστροφή στο αρχικό Menu");
-            ch = Keyb.nextInt();
-            Keyb.nextLine();
+            System.out.print("Επιλογή : ");
+            ch = readSafeInt();
 
             if (ch == 1) {
-                System.out.print("Κωδικός: "); String code = Keyb.nextLine();
-                System.out.print("Λεκτικό: "); String title = Keyb.nextLine();
-                System.out.print("Κωδικός Κατασκευαστή: "); String mCode = Keyb.nextLine();
+                System.out.print("Κωδικός: ");
+                String code = Keyb.nextLine();
+
+                // Validation: Έλεγχος μοναδικότητας κωδικού προϊόντος
+                if (findProduct(code) != null) {
+                    System.out.println("Σφάλμα: Αυτός ο κωδικός προϊόντος υπάρχει ήδη!");
+                    this.Pause();
+                    continue;
+                }
+
+                System.out.print("Λεκτικό: ");
+                String title = Keyb.nextLine();
+
+                System.out.print("Κωδικός Κατασκευαστή: ");
+                String mCode = Keyb.nextLine();
                 Manufacturer m = findManufacturer(mCode);
-                if (m == null) { System.out.println("Σφάλμα: Δεν υπάρχει αυτός ο κατασκευαστής!"); this.Pause(); continue; }
-                System.out.print("Τιμή: "); double price = Keyb.nextDouble();
-                System.out.print("Ποσότητα: "); int qty = Keyb.nextInt(); Keyb.nextLine();
-                System.out.print("Ανάλυση Κάμερας: "); String cam = Keyb.nextLine();
-                System.out.print("Χρώμα: "); String color = Keyb.nextLine();
+                if (m == null) {
+                    System.out.println("Σφάλμα: Δεν υπάρχει αυτός ο κατασκευαστής!");
+                    this.Pause();
+                    continue;
+                }
+
+                System.out.print("Τιμή: ");
+                double price = readSafeDouble(); // Χρήση safe μεθόδου
+
+                System.out.print("Ποσότητα: ");
+                int qty = readSafeInt(); // Χρήση safe μεθόδου
+
+                System.out.print("Ανάλυση Κάμερας: ");
+                String cam = Keyb.nextLine();
+
+                System.out.print("Χρώμα: ");
+                String color = Keyb.nextLine();
+
+                // Validation: Έλεγχος για θετικές/μη αρνητικές τιμές
+                if (price <= 0 || qty < 0) {
+                    System.out.println("Σφάλμα: Η τιμή πρέπει να είναι θετική και η ποσότητα μη αρνητική!");
+                    this.Pause();
+                    continue;
+                }
 
                 allProducts.add(new SmartPhone(code, title, m, price, qty, cam, color));
                 System.out.println("Το κινητό προστέθηκε!");
                 this.Pause();
+
             } else if (ch == 2) {
-                System.out.print("Δώστε κωδικό κινητού για διόρθωση: "); String code = Keyb.nextLine();
+                System.out.print("Δώστε κωδικό κινητού για διόρθωση: ");
+                String code = Keyb.nextLine();
                 Product p = findProduct(code);
 
                 if (p instanceof SmartPhone) {
                     SmartPhone s = (SmartPhone) p;
-                    System.out.print("Νέο Λεκτικό: "); s.setTitle(Keyb.nextLine());
-                    System.out.print("Νέα Τιμή: "); s.setPrice(Keyb.nextDouble());
-                    System.out.print("Νέα Ποσότητα: "); s.setQuantity(Keyb.nextInt()); Keyb.nextLine();
-                    System.out.print("Νέα Κάμερα: "); s.setCamRes(Keyb.nextLine());
-                    System.out.print("Νέο Χρώμα: "); s.setColor(Keyb.nextLine());
-                    System.out.println("Ενημερώθηκε!");
-                } else System.out.println("Δεν βρέθηκε SmartPhone με αυτόν τον κωδικό!");
+                    System.out.print("Νέο Λεκτικό: ");
+                    s.setTitle(Keyb.nextLine());
+
+                    System.out.print("Νέα Τιμή: ");
+                    double newPrice = readSafeDouble(); // Χρήση safe μεθόδου
+
+                    System.out.print("Νέα Ποσότητα: ");
+                    int newQty = readSafeInt(); // Χρήση safe μεθόδου
+
+                    System.out.print("Νέα Κάμερα: ");
+                    s.setCamRes(Keyb.nextLine());
+
+                    System.out.print("Νέο Χρώμα: ");
+                    s.setColor(Keyb.nextLine());
+
+                    // Validation: Έλεγχος τιμών και στη διόρθωση
+                    if (newPrice <= 0 || newQty < 0) {
+                        System.out.println("Σφάλμα: Μη έγκυρες τιμές! Η διόρθωση ακυρώθηκε.");
+                    } else {
+                        s.setPrice(newPrice);
+                        s.setQuantity(newQty);
+                        System.out.println("Ενημερώθηκε!");
+                    }
+                } else {
+                    System.out.println("Δεν βρέθηκε SmartPhone με αυτόν τον κωδικό!");
+                }
                 this.Pause();
+
             } else if (ch == 3) {
-                System.out.print("Δώστε κωδικό για διαγραφή: "); String code = Keyb.nextLine();
+                System.out.print("Δώστε κωδικό για διαγραφή: ");
+                String code = Keyb.nextLine();
                 Product p = findProduct(code);
                 if (p instanceof SmartPhone) {
                     allProducts.remove(p);
                     System.out.println("Διαγράφηκε!");
-                } else System.out.println("Δεν βρέθηκε!");
+                } else {
+                    System.out.println("Δεν βρέθηκε!");
+                }
                 this.Pause();
+
             } else if (ch == 4) {
+                System.out.println("\n--- ΛΙΣΤΑ ΚΙΝΗΤΩΝ ΤΗΛΕΦΩΝΩΝ ---");
+                boolean found = false;
                 for (Product p : allProducts) {
-                    if (p instanceof SmartPhone) System.out.println(p);
+                    if (p instanceof SmartPhone) {
+                        System.out.println(p);
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    System.out.println("Δεν υπάρχουν καταχωρημένα SmartPhones.");
                 }
                 this.Pause();
             }
-        }while (ch != 0);
+        } while (ch != 0);
     }
 
 
