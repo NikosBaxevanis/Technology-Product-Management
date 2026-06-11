@@ -5,28 +5,43 @@ import Data.PersonalComputer;
 import Data.Product;
 import Data.SmartPhone;
 import Sales.Sales;
-
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * Η κεντρική κλάση ελέγχου της εφαρμογής (Controller / User Interface).
+ * Διαχειρίζεται το μενού επιλογών, τη φόρτωση και αποθήκευση δεδομένων σε αρχεία CSV,
+ * καθώς και τις CRUD λειτουργίες για προϊόντα, κατασκευαστές και πωλήσεις.
+ */
 public  class MainP {
 
+    /**
+     * Δημιουργεί ένα νέο αντικείμενο MainP και αρχικοποιεί τον Scanner
+     * για την ανάγνωση από το σύστημα εισόδου (πληκτρολόγιο).
+     */
     public MainP() {
         this.Keyb = new Scanner(System.in);
     }
 
+    /** Λίστα που αποθηκεύει όλα τα προϊόντα (PersonalComputers και SmartPhones) του καταστήματος. */
     private static ArrayList<Product> allProducts = new ArrayList<>();
+    /** Λίστα που αποθηκεύει όλους τους καταχωρημένους κατασκευαστές. */
     private static ArrayList<Manufacturer> manufacturers = new ArrayList<>();
+    /** Λίστα που αποθηκεύει το ιστορικό όλων των πωλήσεων που έχουν πραγματοποιηθεί. */
     private static ArrayList<Sales> allSales = new ArrayList<>();
 
     Scanner Keyb;
-
+    /** Ακολουθούν τα ονόματα των αρχείων csv για την αποθήκευση των κατασκευαστών, των προϊόντων και των πωλήσεων/στατιστικών **/
     private final static String ManufacturerFile = "Manufacturers.csv";
     private final static String ProductFile = "Products.csv";
     private final static String SaleFile = "Sales.csv";
 
+    /**
+     * Αποθηκεύει όλα τα τρέχοντα δεδομένα της εφαρμογής (κατασκευαστές, προϊόντα, πωλήσεις)
+     * στα αντίστοιχα αρχεία CSV. Η κλήση της γίνεται αυτόματα κατά την έξοδο από το κεντρικό μενού.
+     */
     public void SaveData() {
         // 1. Αποθήκευση Κατασκευαστών
         try (PrintWriter Pr = new PrintWriter(ManufacturerFile)) {
@@ -61,6 +76,11 @@ public  class MainP {
         System.out.println("Data Successfully Saved to CSV files...");
     }
 
+    /**
+     * Φορτώνει τα δεδομένα από τα αρχεία CSV (Manufacturers, Products, Sales)
+     * κατά την εκκίνηση της εφαρμογής. Αν κάποιο αρχείο δεν βρεθεί, εμφανίζει
+     * ενημερωτικό μήνυμα χωρίς να διακόπτεται η ροή του προγράμματος.
+     */
     public void LoadData() {
         String Line = null;
         String[] FMat;
@@ -142,7 +162,11 @@ public  class MainP {
 
 
 
-
+    /**
+     * Η κύρια μέθοδος (main) εκκίνησης της εφαρμογής. Αρχικοποιεί τον ελεγκτή,
+     * φορτώνει τα υπάρχοντα δεδομένα, εισάγει εικονικά (dummy) δεδομένα αν οι λίστες
+     * είναι άδειες και εκκινεί το κεντρικό μενού.
+     */
     public static void main(String[] args) {
 
         MainP MP = new MainP();
@@ -162,11 +186,18 @@ public  class MainP {
         MP.Menu();
     }
 
+    /**
+     * Παγώνει προσωρινά τη ροή του προγράμματος και περιμένει από τον χρήστη
+     * να πιέσει το πλήκτρο 'Enter' για να συνεχίσει.
+     */
     void Pause() {
         System.out.print("\n\nΠιέστε <Enter> για συνέχεια  ");
         this.Keyb.nextLine();
     }
 
+    /**
+     * Καθαρίζει την οθόνη της κονσόλας.
+     */
     public void Cls() {
         try {
             new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
@@ -179,7 +210,7 @@ public  class MainP {
 
     /**
      * Διαβάζει έναν ακέραιο αριθμό με ασφάλεια. Αν ο χρήστης εισάγει άκυρα δεδομένα,
-     * τον προτρέπει να ξαναπροσπαθήσει χωρίς να κρασάρει η εφαρμογή.
+     * τον προτρέπει να ξαναπροσπαθήσει χωρίς να crashάρει η εφαρμογή.
      * * @return Ο έγκυρος ακέραιος που πληκτρολόγησε ο χρήστης.
      */
     private int readSafeInt() {
@@ -212,6 +243,12 @@ public  class MainP {
         }
     }
 
+
+    /**
+     * Αυτό είναι το κεντρικό μενού της εφαρμογής και δρομολογεί τον χρήστη
+     * στα αντίστοιχα υπομενού ανάλογα με την επιλογή του.
+     * Η μέθοδος επιλογής των υπομενού έχει κατασκευαστή με switch.
+     */
     public  void Menu() {
         int ch;
         do {
@@ -324,6 +361,11 @@ public  class MainP {
         } while (ch != 0);
     }
 
+    /**
+     * Αναζητά έναν κατασκευαστή στη λίστα με βάση τον μοναδικό του κωδικό.
+     * * @param code Ο κωδικός του κατασκευαστή προς αναζήτηση.
+     * @return Το αντικείμενο Manufacturer αν βρεθεί, αλλιώς null.
+     */
     private   Manufacturer findManufacturer(String code) {
         for (Manufacturer m : manufacturers) if (m.getCode().equalsIgnoreCase(code)) return m;
         return null;
@@ -588,7 +630,11 @@ public  class MainP {
         } while (ch != 0);
     }
 
-
+    /**
+     * Αναζητά ένα προϊόν στη γενική λίστα προϊόντων με βάση τον κωδικό του.
+     * * @param code Ο κωδικός του προϊόντος προς αναζήτηση.
+     * @return Το αντικείμενο Product αν βρεθεί, αλλιώς null.
+     */
     private Product findProduct(String code) {
         for (Product p : allProducts) {
             if (p.getCode().equalsIgnoreCase(code)) return p;
@@ -596,7 +642,13 @@ public  class MainP {
         return null;
     }
 
-
+    /**
+     * Διαχειρίζεται το μενού πωλήσεων και στατιστικών. Παρέχει επιλογές για:
+     * 1. Καταχώρηση νέας πώλησης με έλεγχο διαθέσιμου αποθέματος.
+     * 2. Προβολή του ιστορικού πωλήσεων.
+     * 3. Υπολογισμό και εμφάνιση εσόδων ανά κατηγορία συσκευής (PC / SmartPhone).
+     * 4. Υπολογισμό και εμφάνιση εσόδων ανά κατασκευαστή.
+     */
     private void menuSalesAndStats() {
         int ch;
         do {
